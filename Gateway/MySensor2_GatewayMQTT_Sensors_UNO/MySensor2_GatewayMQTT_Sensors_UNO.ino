@@ -1,11 +1,16 @@
 // This MQTT gateway works on Arduino UNO
 
 // Enable debug prints to serial monitor - does not fit the UNO board with actual defined sensors!
-//#define MY_DEBUG 
+#define MY_DEBUG
 
 // Enables and select radio type (if attached)
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
+
+//#define MY_SIGNING_SOFT
+//#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+//#define MY_SIGNING_REQUEST_SIGNATURES
+//#define MY_SIGNING_NODE_WHITELISTING {{.nodeId = MOTION_SENSOR_ID,.serial = {0x12,0x34,0x56,0x78,0x90,0x12,0x34,0x56,0x78}}}
 
 #define MY_GATEWAY_MQTT_CLIENT
 
@@ -20,10 +25,10 @@
 #define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 
 // W5100 Ethernet module SPI enable (optional if using a shield/module that manages SPI_EN signal)
-//#define MY_W5100_SPI_EN 4  
+//#define MY_W5100_SPI_EN 4
 
 // Enable Soft SPI for NRF radio (note different radio wiring is required)
-// The W5100 ethernet module seems to have a hard time co-operate with 
+// The W5100 ethernet module seems to have a hard time co-operate with
 // radio on the same spi bus.
 // The PINs mentioned here are for Arduino Mega2560 ! Color code is from MySensor site
 #if !defined(MY_W5100_SPI_EN)
@@ -31,7 +36,7 @@
   #define MY_SOFT_SPI_SCK_PIN 14 // A0, Green
   #define MY_SOFT_SPI_MISO_PIN 16  // A2, Violet
   #define MY_SOFT_SPI_MOSI_PIN 15  // A1, Blue
-#endif  
+#endif
 
 // When W5100 is connected we have to move CE/CSN pins for NRF radio
 #define MY_RF24_CE_PIN 5  // Orange
@@ -49,11 +54,11 @@
 //#define MY_IP_SUBNET_ADDRESS 255,255,255,0
 
 
-// MQTT broker ip address.  
+// MQTT broker ip address.
 #define MY_CONTROLLER_IP_ADDRESS 192,168,1,100
 
-// The MQTT broker port to to open 
-#define MY_PORT 1883      
+// The MQTT broker port to to open
+#define MY_PORT 1883
 
 /*
 // Flash leds on rx/tx/err
@@ -66,9 +71,9 @@
 // Enable Inclusion mode button on gateway
 #define MY_INCLUSION_BUTTON_FEATURE
 // Set inclusion mode duration (in seconds)
-#define MY_INCLUSION_MODE_DURATION 60 
+#define MY_INCLUSION_MODE_DURATION 60
 // Digital pin used for inclusion mode button
-#define MY_INCLUSION_MODE_BUTTON_PIN  3 
+#define MY_INCLUSION_MODE_BUTTON_PIN  3
 
 #define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
 #define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
@@ -78,7 +83,7 @@
 #include <Ethernet.h>
 #include <SPI.h>
 #include <MySensor.h>
-#include <DHT.h> 
+#include <DHT.h>
 
 #define CHILD_ID_Analog1 1
 #define CHILD_ID_PIR 2
@@ -121,13 +126,13 @@ float Temp1;
 float Temp, Hum;
 byte StateREL=0, StateREL1=0, StateREL2=0;
 
-void setup() { 
+void setup() {
   pinMode(PIR_PIN, INPUT_PULLUP);
   pinMode(REL1_PIN, OUTPUT);
   digitalWrite(REL1_PIN, StateREL1);
   pinMode(REL2_PIN, OUTPUT);
   digitalWrite(REL2_PIN, StateREL2);
-  dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN); 
+  dht.setup(HUMIDITY_SENSOR_DIGITAL_PIN);
   t0=millis();
 }
 
@@ -138,7 +143,7 @@ void presentation() {
   present(CHILD_ID_REL1, S_LIGHT);
   present(CHILD_ID_REL2, S_LIGHT);
   present(CHILD_ID_HUM, S_HUM);
-  present(CHILD_ID_TEMP, S_TEMP);  
+  present(CHILD_ID_TEMP, S_TEMP);
 }
 
 void loop() {
@@ -153,14 +158,14 @@ void loop() {
 void ServerUpdate() {
   InA1=analogRead(Analog_PIN);
   send(msgAnalog1.set(InA1));
-  
+
   send(msgPir.set(StatePIR ? "ON" : "OFF"));
-  
+
   InAnalog1=analogRead(MQ_PIN);
   if (InAnalog1<refMQ) refMQ=InAnalog1; // if read value is lower that actual, change the 0 refference with the actual one
   valMQ=InAnalog1-refMQ;
   send(msgGas.set(valMQ));
-  
+
   Hum = dht.getHumidity();
   Temp = dht.getTemperature();
   send(msgTemp.set(Temp, 1));
@@ -199,5 +204,5 @@ void receive(const MyMessage &message) {
       break;
     }
 
-   } 
+   }
 }
